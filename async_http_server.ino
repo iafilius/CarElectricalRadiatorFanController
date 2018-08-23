@@ -64,9 +64,10 @@ void async_http_server_setup(void) {
     char buffer[C_STR_BUFSIZE];
     String content ;
 
-#define Cockpitsize 4500
+#ifdef STRING_PLUS_IS_ALLOC_BUG_WORKAROUND
+ #define Cockpitsize 4500
     content.reserve(Cockpitsize);     // This seems to reduce crashes a lot ( but tcp_close ... stays after )
-
+#endif
     //<meta http-equiv=\"refresh\" content=\"5\" >\n
 
 
@@ -217,6 +218,7 @@ function submitForm(params) {\n\
 ";
     request->send(200, "text/html", content);
 
+#ifdef STRING_PLUS_IS_ALLOC_BUG_WORKAROUND
     if (g_debug) {
       Serial.print("/Cockpit reserved so many bytes:");
       Serial.println((Cockpitsize));
@@ -226,7 +228,7 @@ function submitForm(params) {\n\
       Serial.print("ESP.getFreeHeap: ");
       Serial.println(ESP.getFreeHeap());
     }
-
+#endif
 
   });
 
@@ -234,9 +236,10 @@ function submitForm(params) {\n\
   async_server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest * request) {
     String content ;
 
-#define stylecsssize 3000
+#ifdef STRING_PLUS_IS_ALLOC_BUG_WORKAROUND
+ #define stylecsssize 3000
     content.reserve(stylecsssize);    // This seems to reduce crashes a lot (tcp close/heap corruption/....)
-
+#endif
     content = "* {\
     margin: 0;\
     padding: 0;\
@@ -372,6 +375,7 @@ function submitForm(params) {\n\
 ";
     request->send(200, "text/css", content);
 
+#ifdef STRING_PLUS_IS_ALLOC_BUG_WORKAROUND
     if (g_debug) {
       Serial.print("/style.css reserved so many bytes:");
       Serial.println(stylecsssize);
@@ -381,7 +385,7 @@ function submitForm(params) {\n\
       Serial.print("ESP.getFreeHeap: ");
       Serial.println(ESP.getFreeHeap());
     }
-
+#endif
 
   });
 

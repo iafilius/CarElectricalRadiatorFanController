@@ -92,7 +92,7 @@
  *    
  *    Issues:
  *    -It looks like the ESP32 platform (or any platform??) has difficulties with String + operations.
- *     in the main pages  String.reservation is used, which prevents most common type of crash. 
+ *     in the main pages  <String>.reserve is used, which prevents most common type of crash. 
  *    -Common type of crash? yes, unfortunately the tcp stack seems to crash too often on tcp_close(), as quite many people seem to have similar issues, this hasn't been adressed yet.
  *    -CSS menu is blasing fast, and it is difficult NOT to press a menu item at menu popup time.
  *    -CSS menu's pop-up perfectly fine location on IOS, but firefox/chrome (windows) the you can't reach the menu with the mouse (which i do not use in the car anyway...)
@@ -128,8 +128,8 @@
 #endif
 
 
-#define LEDCWRITE_SUSPECTEDBUG_WORKAROUND   
-
+#define LEDCWRITE_SUSPECTEDBUG_WORKAROUND   // use ledc_set_duty_and_update() instead of ledcWrite() because assert/mutix errors show op occasional. 
+#define STRING_PLUS_IS_ALLOC_BUG_WORKAROUND // prealocate String memory to prevent frequently String += operation crashes
 
 #define NO_VALUE  -1  // value set when paramter is given but had no value set
 
