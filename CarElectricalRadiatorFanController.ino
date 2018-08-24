@@ -1,95 +1,11 @@
 /*
  *  PWM car radiator fan control, as addon or repacement for thermostat swich.
- *  
- *  Introduction:
- *   Triggered by the thread on dubbellucht.nl to replace the mechanical radator fan on an oldtimer van for an electical one to gain some power/save some fuel and produce less noice.
- *   But instead fixed location/fixed temperature - thermostat switch with on/off characteristics, i started working on a project using multiple temperature sensors, and microsprocessor controlled PWM Fan motor control.
- *   Started with an arduino leonardo 32U4 micro board, wich worked fine, but soon ran into available memory issue which limited development (even after memory tuning with strings to EEPROM etc).
- *   Switched to the ESP32 platform, with "lots" of memory and lots of integrated options, basically a few generations newer platform.
- *   Alltough it still compiles for leonardo/32U4, development has stopped due lack of space, and lost interrest.
- *   I use the The ESP-WROOM-32 development board , available for about $5 with shipment.
- *   Idea was using both Bluetooth AND WiFi, but abandonned/(put on hold) bluetooth for 3 reasons:
- *    - it eats a real _HUGE_ amount of flash, and needed to repsrtition the 4MB flash
- *    - it eats a quite part of available memory as well (which led to frequent crashes)
- *    - Need to write a native app, and IOS development still can't be doen without investing (money and time)
- *   Shifted focus from serial console to WIFI/webbased, and most importand item are available .. on you phone...
- *   So these days WiFi/webapp is the main focus, and in Cockpit view you can monitor the behavious realtime of the temperatures, and fan status, and you can change the policy/function on the fly from a webbased menu.
- *   After some several firmware updates, I enabled firmware updates over wifi, as the USB port is hidden/water proofed inside the motor room, and my laptop contains policies which make native OTA imposible.
- *  
+ *   *  
  *  History:
  *  1   First operational and installed version (ESP32) 2018/07/15
  *   2018/08/17 recompiled with async tcp commit 5453ec2e3fdd9beb92b8423878008b57be7805e6 for some tcp_close related stability issues
  *   2018/08/20  Fixed crashes with ledcWrite (from timerinterrupt) by switching to  ledc_set_duty_and_update() is is documented thread safe
- *  
- *  
- *  Features:
- *  multi platform (Arduino AVR (ex Leonardo), Arduino ESP32 (ex Doit Devkit V1), features depend on platform and available memory
- *  Configureable Fan Softstart (time) (AVR/ESP32)
- *  Support Dallas DS18B20 temperature sensors
- *    - One designed to be in upper radator hose usinng a well
- *    - One designed to be in lower radator hose
- *    - Selectable resolution 
- *  Oled display (AVR/ESP32)
- *  Persistent parameters (store to NVRAM/EEPROM)
- *  USB/Serial console access
- *    -logging
- *    -dump actual/startup configuration to screen
- *    -setup/configure parameters
- *   Multiple cooling policies/functions
- *    -Realtime change cooling function/policy (either USB/serial or via WIFI (ESP32 only))
- *    -Easy to add you own cooling function compile time.
- *   WiFI (ESP32 only)
- *    webserver:
- *      -Cockpit view, with realtime data using SSE
- *      -Setup page
- *      -debug page
- *      -firmware update page
- *      -does not advertise a default route, and does not disable 3/4G access
- *   RPM measurement
- *    -basic RPM measurement support, for future integration in cooling functions/policies
- *   Firmware upgrade options
- *    -USB (AVR & ESP32) through Arduino IDE
- *    -OTA (WIFI) (ESP32) through Arduino IDE, native OTA but needs rights on client for opening up ports, may not work on corporate workstation, even with elevated rights.
- *    -Webserver (WIFI) (ESP32), use file upload from any browser and choose bin file from <profiledir>\AppData\Local\Temp\arduino_build_296723\*.bin. no specefic rights on laptop required.
- *   Watchdog
- *    -
- *   Service announcement through Bonjour/MDNS on WiFi (ESP32)
- *    - use Bonjoursearch (IOS)
- *    
- *    Hardware list:
- *    -Biggest/strongest electrical radiator fan you can fit/buy
- *    -Fet Module designed to switch PWM/inductive loads (ex DS16 PWM Motor Speed Controll controller))
- *    -Fet Driver IC (ex MIC4422YN)
- *    -a mini switching power supply for microcontroller module (generating 7 V (or 5V or 3,3 at your choice), accepts 8-24V)
- *    -Arduino module (eg Leonaro), or ESP wroom-32 Dev board, or just the ESP wroom-32 module itself
- *    -DS18B20 temperature sensors with stainless protection tube
- *    -Thermowell for inserting the DS18B20 sensors
- *    -thermal grease for inserting the sensors into the thermowell
- *    -radiator hose temperature sensor adapter (get biggest diameter you can fit, eg 42mm) (to insert the termowell)
- *    -2 short pieces radiator hoses, (when you don't want to cur the original hoses)
- *    
- *    Schema: ToDo in KiCad
- *    
- *    Software Module dependency:
- *    -ESP32 core for arduino (ESP32)
- *    -TimerOne/TimerThree (AVR)
- *    -SSD1306Ascii (AVR)
- *    -SSD1306 (ESP32)
- *    -SSD1306AsciiAvrI2c
- *    -OneWire
- *    -DallasTemperature
- *    -AsyncTCP (ESP32/WiFI/webserver) (need to download from github)
- *    -ESPAsyncWebServer (need to download from github)
- *    -WiFiManager ESP32 (planned ESP32)
- *    
- *    Buildin policies:
- *    -fan permanent off
- *    -fan permanent on
- *    -policy trying to keep some thermal capacity reserve
- *    -policy to turn fan on above a certain temperature (like 90 degrees celsius)
- *    <put your smarter funcitons here>
- *    
- *    
+ *      
  *    Issues:
  *    -It looks like the ESP32 platform (or any platform??) has difficulties with String + operations.
  *     in the main pages  <String>.reserve is used, which prevents most common type of crash. 
@@ -103,7 +19,7 @@
  *      Ideal: RPM is calculated directly form the time betwen to (or more) pulses 
  *    -2018/08/08 experienced the PWM counter value dit not seem to turn on, not in SSE and did not hear the fan. manual turning on dit als not work.
  *      Need a online/wifi based syslog solution......
- *    -2018/08/21 While using "Cockpit" in simulation mode and having a non-perfect WiFi connectin (distance/metal motor compartment), the watchdog didn't feed the dog in  tim e(8000ms)
+ *    -2018/08/21 While using "Cockpit" in simulation mode and having a non-perfect WiFi connecting (distance/metal motor compartment), the watchdog didn't feed the dog in  tim e(8000ms)
  *      -So when stalling the main loop... the functionality is heavily under attack!! needs to be fixed.
  *      -As workaround a fix for thottling SSE updates is implemented and constant C_SSE_Update_throttle_time_ms, and works fine under normal conditions. But a simulated WIFI out of reach test still blocks and hangs the system!!!
  */
@@ -119,8 +35,8 @@
 #include <string>
 //#include <C:\Users\m99i941\Arduino\hardware\espressif\esp32\tools\sdk\include\lwip\apps\dhcpserver_options.h>
 #endif
-//#define C_STR_BUFSIZE 20    // short buffer for display, to be used witrh snprintf etc.
-#define C_STR_BUFSIZE 100    // short buffer for display, to be used witrh snprintf etc.
+//#define C_STR_BUFSIZE 20    // short buffer for display, to be used with snprintf etc.
+#define C_STR_BUFSIZE 100    // short buffer for display, to be used with snprintf etc.
 
 // watchdog includes (can't be moved to watchdog module
 #ifdef __AVR__
