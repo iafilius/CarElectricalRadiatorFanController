@@ -45,7 +45,7 @@
 
 
 #define LEDCWRITE_SUSPECTEDBUG_WORKAROUND   // use ledc_set_duty_and_update() instead of ledcWrite() because assert/mutix errors show op occasional. 
-#define STRING_PLUS_IS_ALLOC_BUG_WORKAROUND // prealocate String memory to prevent frequently String += operation crashes
+#define STRING_PLUS_IS_ALLOC_BUG_WORKAROUND // prealocate String memory to prevent frequently String += operation crashes (only noticable when stressed)
 
 #define NO_VALUE  -1  // value set when paramter is given but had no value set
 
@@ -336,11 +336,11 @@ AsyncEventSource events("/events");     // html5 server stream events ... needs 
 #include <PersonalIncludes.h>   // Located in libaries/
 
 #ifndef WIFI_PASS
-#define WIFI_PASS "0123456789"
+ #define WIFI_PASS "0123456789"
 #endif
-#ifndef WIFI_SID
-#define WIFI_SSID  "WiFISIDasClient"
-#define WIFI_Server_SSID  "MyESP"
+#ifndef WIFI_SSID
+ #define WIFI_SSID  "WiFISIDasClient"
+ #define WIFI_Server_SSID  "MyESP"
 #endif
 
 bool shouldReboot=false;    // set by /update in async http server

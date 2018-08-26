@@ -6,8 +6,8 @@
 //WiFiServer sync_server(80);
 AsyncWebServer async_server(80);
 #define SSE_reconnect_time_ms 5000
-//#define C_SSE_Update_throttle_time_ms  500
-const int C_SSE_Update_throttle_time_ms=500;    // cons int instead define to makeis visable from other modules
+#define C_SSE_Update_throttle_time_ms  250
+//const int C_SSE_Update_throttle_time_ms=250;    // cons int instead define to makeis visable from other modules
 
 volatile bool g_Enforce_HTTP5_SSE_update = false;
 
